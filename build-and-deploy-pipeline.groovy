@@ -1,6 +1,7 @@
 node {
     String projectAcronym = params['PROJECT_ACRONYM'] ?: error('Mandatory parameter PROJECT_ACRONYM was not provided.')
     String gitCloneUrl = params['GIT_CLONE_URL'] ?: error('Mandatory parameter GIT_CLONE_URL was not provided.')
+    String gitCredentialsId = params['GIT_CREDENTIALS_ID'] ?: error('Mandatory parameter GIT_CLONE_URL was not provided.')
 
     String appPackagingType = params['APP_PACKAGING_TYPE'] ?: 'jar'
     String artifactSuffix = appPackagingType.toLowerCase()
@@ -18,7 +19,7 @@ node {
     Boolean deployArtifact = params['DEPLOY_ARTIFACT'] ?: true
 
     stage('Preparation') {
-        git gitCloneUrl
+        git credentialsId: gitCredentialsId, url: gitCloneUrl
         mvnHome = tool mvnToolId
     }
 
