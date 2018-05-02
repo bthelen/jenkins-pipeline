@@ -39,7 +39,7 @@ node {
         "files":[
             {
                 "pattern": "tarball/*.tgz",
-                "target": "${artifactoryBuildRepo}/${projectAcronym}/new-builds"
+                "target": "${artifactoryBuildRepo}/${projectAcronym}/new-builds/"
             }
         ]
         }"""
