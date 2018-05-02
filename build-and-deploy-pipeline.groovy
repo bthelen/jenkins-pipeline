@@ -16,7 +16,7 @@ node {
     String pcfDevApiTarget = params['PCF_DEV_API_TARGET'] ?: 'api.run.pivotal.io'
     String pcfDevOrg = params['PCF_DEV_ORG'] ?: 'org-name'
     String pcfDevSpace = params['PCF_DEV_SPACE'] ?: 'space-name'
-    Boolean deployArtifact = params['DEPLOY_ARTIFACT'] ?: true
+    Boolean deployArtifact = params['DEPLOY_ARTIFACT'] ?: false
 
     stage('Preparation') {
         git credentialsId: gitCredentialsId, url: gitCloneUrl
