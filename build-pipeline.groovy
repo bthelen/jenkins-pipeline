@@ -1,6 +1,8 @@
 node {
     String projectAcronym = params['PROJECT_ACRONYM'] ?: error('Mandatory parameter PROJECT_ACRONYM was not provided.')
     String gitCloneUrl = params['GIT_CLONE_URL'] ?: error('Mandatory parameter GIT_CLONE_URL was not provided.')
+    String gitBranch = params['GIT_BRANCH'] ?: 'master'
+    String gitCredentialsId = params['GIT_CREDENTIALS_ID'] ?: error('Mandatory parameter GIT_CREDENTIALS_ID was not provided.')
 
     String appPackagingType = params['APP_PACKAGING_TYPE'] ?: 'jar'
     String artifactSuffix = appPackagingType.toLowerCase()
@@ -12,7 +14,7 @@ node {
     String mvnToolId = params['MVN_TOOL_ID'] ?: 'Maven 3.0.5'
 
     stage('Preparation'){
-        git gitCloneUrl
+        git branch: gitBranch, credentialsId: gitCredentialsId, url: gitCloneUrl
         mvnHome = tool mvnToolId
     }
 
