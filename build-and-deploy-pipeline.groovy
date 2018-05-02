@@ -15,19 +15,20 @@ node {
     String pcfDevApiTarget = params['PCF_DEV_API_TARGET'] ?: 'api.run.pivotal.io'
     String pcfDevOrg = params['PCF_DEV_ORG'] ?: 'org-name'
     String pcfDevSpace = params['PCF_DEV_SPACE'] ?: 'space-name'
+    Boolean deployArtifact = params['DEPLOY_ARTIFACT'] ?: true
 
-    stage('Preparation'){
+    stage('Preparation') {
         git gitCloneUrl
         mvnHome = tool mvnToolId
     }
 
-    stage('Build'){
+    stage('Build') {
         if (isUnix()) {
             sh "'${mvnHome}/bin/mvn' clean package"
         }
     }
 
-    stage('Results'){
+    stage('Results') {
         junit '**/target/surefire-reports/TEST-*.xml'
 
         sh 'rm -rf release-archive tarball && mkdir -p release-archive tarball'
@@ -38,7 +39,7 @@ node {
         archive 'tarball/*.tgz'
     }
 
-    stage('Upload build to Artifactory'){
+    stage('Upload build to Artifactory') {
         def server = Artifactory.server artifactoryServerId
         def uploadSpec = """{
         "files":[
@@ -51,7 +52,7 @@ node {
         server.upload(uploadSpec)
     }
 
-    stage('Prepare next dev staging build in Artifactory'){
+    stage('Prepare next dev staging build in Artifactory') {
         sh "rm -rf dev-staging-tarball && mkdir -p dev-staging-tarball && cp tarball/*.tgz dev-staging-tarball/${projectAcronym}-dev-staging.tgz"
         def server = Artifactory.server artifactoryServerId
         def uploadSpec = """{
@@ -65,7 +66,7 @@ node {
         server.upload(uploadSpec)
     }
 
-    stage('Get artifact from repository'){
+    stage('Get artifact from repository') {
         def server = Artifactory.server artifactoryServerId
         def downloadSpec = """{
         "files":[
@@ -83,14 +84,16 @@ node {
         sh "mv *.${appPackagingType} target/"
     }
 
-    stage('Push to development environment on PCF'){
-        timeout(time: 300, unit: 'SECONDS'){
-            pushToCloudFoundry(
-                    target: pcfDevApiTarget,
-                    organization: pcfDevOrg,
-                    cloudSpace: pcfDevSpace,
-                    credentialsId: pcfDevCredentialsId
-            )
+    stage('Push to development environment on PCF') {
+        if (deployArtifact) {
+            timeout(time: 300, unit: 'SECONDS') {
+                pushToCloudFoundry(
+                        target: pcfDevApiTarget,
+                        organization: pcfDevOrg,
+                        cloudSpace: pcfDevSpace,
+                        credentialsId: pcfDevCredentialsId
+                )
+            }
         }
     }
 }
