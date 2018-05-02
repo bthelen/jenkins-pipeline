@@ -11,6 +11,11 @@ node {
     String artifactoryBuildRepo = params['ARTIFACTORY_BUILD_REPO'] ?: 'lib-stapshot-local'
     String mvnToolId = params['MVN_TOOL_ID'] ?: 'Maven 3.0.5'
 
+    String pcfDevCredentialsId = params['PCF_DEV_CREDENTIALS_ID'] ?: 'pcf-dev-space'
+    String pcfDevApiTarget = params['PCF_DEV_API_TARGET'] ?: 'api.run.pivotal.io'
+    String pcfDevOrg = params['PCF_DEV_ORG'] ?: 'org-name'
+    String pcfDevSpace = params['PCF_DEV_SPACE'] ?: 'space-name'
+
     stage('Preparation'){
         git gitCloneUrl
         mvnHome = tool mvnToolId
@@ -58,5 +63,34 @@ node {
         ]
         }"""
         server.upload(uploadSpec)
+    }
+
+    stage('Get artifact from repository'){
+        def server = Artifactory.server artifactoryServerId
+        def downloadSpec = """{
+        "files":[
+            {
+                "pattern": "${artifactoryBuildRepo}/${projectAcronym}/cloud-dev-staging/*.tgz",
+                "target": "release-tarball/",
+                "flat": true
+            }
+        ]
+        }"""
+        server.download(downloadSpec)
+
+        sh 'tar -xvzf release-tarball/*.tgz'
+        sh 'rm -rf target && mkdir -p target'
+        sh "mv *.${appPackagingType} target/"
+    }
+
+    stage('Push to development environment on PCF'){
+        timeout(time: 300, unit: 'SECONDS'){
+            pushToCloudFoundry(
+                    target: pcfDevApiTarget,
+                    organization: pcfDevOrg,
+                    cloudSpace: pcfDevSpace,
+                    credentialsId: pcfDevCredentialsId
+            )
+        }
     }
 }
