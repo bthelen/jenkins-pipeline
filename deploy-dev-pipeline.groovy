@@ -15,6 +15,7 @@ node {
     String pcfDevSpace = params['PCF_DEV_SPACE'] ?: 'space-name'
 
     stage('Get artifact from repository'){
+        sh 'rm -rf release-tarball && mkdir -p release-tarball'
         def server = Artifactory.server artifactoryServerId
         def downloadSpec = """{
         "files":[
